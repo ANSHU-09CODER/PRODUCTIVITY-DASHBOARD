@@ -111,7 +111,6 @@ function dailyPlanner() {
 
     dayPlannerInput.forEach(function (elem) {
         elem.addEventListener('input', function () {
-            console.log('hello');
             dayPlanData[elem.id] = elem.value
 
             localStorage.setItem('dayPlanData', JSON.stringify(dayPlanData))
@@ -228,7 +227,7 @@ pomodoroTimer()
 function weatherFunctionality() {
 
     var apiKey = null
-    var city = 'Bhopal'
+    var city = 'Ghaziabad'
 
 
 
@@ -325,3 +324,81 @@ function changeTheme() {
 }
 
 changeTheme()
+
+
+function dailyGoals() {
+
+    var currentGoals = []
+
+    if (localStorage.getItem('currentGoals')) {
+        currentGoals = JSON.parse(localStorage.getItem('currentGoals'))
+    }
+
+    var allGoals = document.querySelector('.allGoals')
+    var progressBar = document.querySelector('#progress-bar')
+    var progressText = document.querySelector('#progress-text')
+
+    function renderGoals() {
+        var sum = ''
+
+        if (currentGoals.length === 0) {
+            sum = '<p class="empty-goals">No goals added yet. Start by adding one! 🎯</p>'
+        } else {
+            currentGoals.forEach(function (elem, idx) {
+                sum = sum + `<div class="goal-item ${elem.done ? 'done' : ''}">
+                    <div class="goal-left">
+                        <input type="checkbox" data-idx="${idx}" ${elem.done ? 'checked' : ''}>
+                        <span class="goal-text">${elem.task}</span>
+                    </div>
+                    <button class="goal-delete" data-idx="${idx}" type="button">Delete</button>
+                </div>`
+            })
+        }
+
+        allGoals.innerHTML = sum
+
+        // Update progress
+        var completed = currentGoals.filter(function (g) { return g.done }).length
+        var total = currentGoals.length
+        var percent = total === 0 ? 0 : (completed / total) * 100
+        progressBar.style.width = percent + '%'
+        progressText.textContent = `${completed} of ${total} goals completed`
+
+        // Save to localStorage
+        localStorage.setItem('currentGoals', JSON.stringify(currentGoals))
+
+        // Checkbox listeners
+        document.querySelectorAll('.goal-left input[type="checkbox"]').forEach(function (cb) {
+            cb.addEventListener('change', function () {
+                var idx = cb.getAttribute('data-idx')
+                currentGoals[idx].done = cb.checked
+                renderGoals()
+            })
+        })
+
+        // Delete listeners
+        document.querySelectorAll('.goal-delete').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var idx = btn.getAttribute('data-idx')
+                currentGoals.splice(idx, 1)
+                renderGoals()
+            })
+        })
+    }
+
+    renderGoals()
+
+    var form = document.querySelector('.addGoal form')
+    var goalInput = document.querySelector('.addGoal form #goal-input')
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault()
+        if (!goalInput.value.trim()) return
+        currentGoals.push({ task: goalInput.value.trim(), done: false })
+        goalInput.value = ''
+        renderGoals()
+    })
+
+}
+
+dailyGoals()
